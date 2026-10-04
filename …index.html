@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مساعد تخريج الأحاديث وكتابة الخطبة</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f3ea; --card:#ffffff; --ink:#22301f; --muted:#6b7263;
+  --green:#2f5233; --green-d:#1e3a22; --gold:#b68a35;
+  --ok-bg:#e5f3e1; --ok-bd:#4c8c4a; --ok-tx:#245b23;
+  --warn-bg:#fdf1d6; --warn-bd:#c99a2e; --warn-tx:#7a5b0a;
+  --bad-bg:#fbe4e2; --bad-bd:#c1544a; --bad-tx:#8a2c24;
+  --border:#e3ddca;
+}
+:root:not([data-theme="light"]) { }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161c15; --card:#1f2a1d; --ink:#eef0e6; --muted:#a3ab97;
+    --border:#33402e; --ok-bg:#1c3220; --warn-bg:#332a13; --bad-bg:#3a1f1c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161c15; --card:#1f2a1d; --ink:#eef0e6; --muted:#a3ab97;
+  --border:#33402e; --ok-bg:#1c3220; --warn-bg:#332a13; --bad-bg:#3a1f1c;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink); font-family:'Cairo',sans-serif;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  min-height:100%;
+}
+header{
+  background:linear-gradient(135deg,var(--green-d),var(--green));
+  color:#fff; padding:22px 18px calc(18px + env(safe-area-inset-top,0px));
+  text-align:center;
+}
+header h1{margin:0 0 6px;font-size:1.35rem;font-weight:700}
+header p{margin:0;color:#d8e3d3;font-size:.9rem}
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 40px}
+.tabs{display:flex;gap:8px;margin:16px 0}
+.tab{
+  flex:1; padding:10px; text-align:center; border-radius:10px; cursor:pointer;
+  background:var(--card); border:1px solid var(--border); font-weight:700; font-size:.92rem;
+  color:var(--muted);
+}
+.tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+.subtab{
+  flex:1; padding:8px; text-align:center; border-radius:8px; cursor:pointer;
+  background:var(--bg); border:1px solid var(--border); font-weight:700; font-size:.85rem;
+  color:var(--muted);
+}
+.subtab.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:16px; margin-bottom:14px;
+}
+textarea,input[type=text]{
+  width:100%; font-family:'Amiri',serif; font-size:1.05rem; padding:12px;
+  border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--ink);
+  resize:vertical;
+}
+textarea{min-height:110px; line-height:1.9}
+button.primary{
+  margin-top:10px; background:var(--green); color:#fff; border:none;
+  padding:11px 18px; border-radius:10px; font-weight:700; font-size:.95rem; cursor:pointer;
+  width:100%;
+}
+button.primary:active{background:var(--green-d)}
+.hint{color:var(--muted);font-size:.82rem;margin-top:6px}
+.result{margin-top:14px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.78rem;font-weight:700}
+.b-ok{background:var(--ok-bg);color:var(--ok-tx);border:1px solid var(--ok-bd)}
+.b-warn{background:var(--warn-bg);color:var(--warn-tx);border:1px solid var(--warn-bd)}
+.b-bad{background:var(--bad-bg);color:var(--bad-tx);border:1px solid var(--bad-bd)}
+.b-unk{background:var(--border);color:var(--muted)}
+.hadith-block{
+  border-radius:10px; padding:12px; margin-bottom:10px; border:1px solid var(--border);
+}
+.hadith-text{font-family:'Amiri',serif;font-size:1.1rem;line-height:2;margin:6px 0}
+.hadith-meta{font-size:.85rem;color:var(--muted);margin-top:6px}
+.hadith-meta b{color:var(--ink)}
+mark{
+  border-radius:4px; padding:1px 2px; cursor:pointer;
+}
+mark.ok{background:var(--ok-bg);box-shadow:inset 0 -2px 0 var(--ok-bd)}
+mark.warn{background:var(--warn-bg);box-shadow:inset 0 -2px 0 var(--warn-bd)}
+mark.bad{background:var(--bad-bg);box-shadow:inset 0 -2px 0 var(--bad-bd)}
+.khutbah-out{font-family:'Amiri',serif;font-size:1.12rem;line-height:2.2;white-space:pre-wrap}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:10px}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.empty{color:var(--muted);text-align:center;padding:20px 0;font-size:.9rem}
+footer{text-align:center;color:var(--muted);font-size:.78rem;padding:10px 0 20px}
+.disclaimer{
+  background:var(--warn-bg); border:1px solid var(--warn-bd); color:var(--warn-tx);
+  border-radius:10px; padding:10px 12px; font-size:.82rem; margin-bottom:14px;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>📜 مساعد تخريج الأحاديث</h1>
+  <p>للخطباء وكتّاب المحتوى الديني — تحقق قبل أن تستشهد</p>
+</header>
+
+<div class="wrap">
+  <div class="disclaimer">
+    نموذج تجريبي لغرض المسابقة — قاعدة البيانات محدودة بعدد من الأحاديث الشائعة كإثبات مفهوم. لا يغني عن الرجوع لأهل الاختصاص وكتب التخريج المعتمدة.
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="single">🔍 تحقق من حديث</div>
+    <div class="tab" data-tab="khutbah">📝 تحليل خطبة</div>
+    <div class="tab" data-tab="prepare">🕌 تجهيز خطبة</div>
+    <div class="tab" data-tab="history">📊 السجل</div>
+    <div class="tab" data-tab="about">ℹ️ عن النظام</div>
+  </div>
+
+  <!-- SINGLE HADITH CHECK -->
+  <div id="panel-single" class="card">
+    <label class="hint">اكتب نص الحديث أو جزءًا منه، أو المعنى:</label>
+    <textarea id="singleInput" placeholder="مثال: اطلبوا العلم ولو بالصين"></textarea>
+    <button class="primary" onclick="checkSingle()">تحقّق من درجة الحديث</button>
+    <div id="singleResult" class="result"></div>
+  </div>
+
+  <!-- KHUTBAH ANALYSIS -->
+  <div id="panel-khutbah" class="card" style="display:none">
+    <label class="hint">الصق نص الخطبة كاملًا، وسنحدد كل حديث فيها بلونه حسب درجته:</label>
+    <textarea id="khutbahInput" style="min-height:160px" placeholder="الصق نص خطبتك هنا..."></textarea>
+    <button class="primary" onclick="checkKhutbah()">حلّل الخطبة</button>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--ok-bd)"></i> صحيح / حسن</span>
+      <span><i class="dot" style="background:var(--warn-bd)"></i> يحتاج مراجعة</span>
+      <span><i class="dot" style="background:var(--bad-bd)"></i> ضعيف / موضوع</span>
+    </div>
+    <div id="khutbahResult" class="result"></div>
+  </div>
+
+  <!-- PREPARE FROM CIRCULAR -->
+  <div id="panel-prepare" class="card" style="display:none">
+    <div class="tabs" style="margin:0 0 12px">
+      <div class="subtab active" data-mode="circular" onclick="setPrepareMode('circular')">📋 نص التعميم كاملًا</div>
+      <div class="subtab" data-mode="title" onclick="setPrepareMode('title')">🏷️ عنوان فقط</div>
+    </div>
+
+    <div id="modeCircular">
+      <label class="hint">الصق نص "التعميم" الصادر من الوزارة/الجهة الرسمية (الموضوع والنقاط المطلوب تغطيتها):</label>
+      <textarea id="circularInput" style="min-height:140px" placeholder="مثال: تعميم بعنوان (أهمية بر الوالدين)، يتضمن: التذكير بفضل البر، بيان صور العقوق المعاصرة، الحث على صلة الأرحام..."></textarea>
+      <p class="hint">⚠️ هذا العرض لا يتصل بالإنترنت لجلب تعاميم الوزارة تلقائيًا؛ الصق نص التعميم يدويًا كما وصلك.</p>
+    </div>
+
+    <div id="modeTitle" style="display:none">
+      <label class="hint">اكتب عنوان الخطبة المطلوبة فقط، وستُصاغ خطبة عامة حوله:</label>
+      <input type="text" id="titleInput" placeholder="مثال: حسن الظن بالله">
+    </div>
+
+    <button class="primary" onclick="prepareKhutbah()" id="prepareBtn">🖋️ جهّز مسودة الخطبة</button>
+    <p class="hint">سيقترح المساعد مسودة كاملة، ثم يفحص تلقائيًا أي أحاديث وردت فيها بنفس آلية التحقق. <b>راجع المسودة والأحاديث بنفسك قبل الإلقاء.</b></p>
+    <div id="prepareStatus" class="hint"></div>
+    <div id="prepareResult" class="result"></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="panel-history" class="card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 style="margin:0;font-size:1rem">سجل عمليات التحقق</h3>
+      <button onclick="clearHistory()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:.8rem;cursor:pointer">🗑️ مسح السجل</button>
+    </div>
+    <p class="hint">محفوظ محليًا في متصفحك فقط، لا يُرسل لأي جهة.</p>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- ABOUT -->
+  <div id="panel-about" class="card" style="display:none">
+    <h3 style="margin:0 0 8px;font-size:1.05rem;color:var(--green)">عن النظام</h3>
+    <p class="hint" style="font-size:.88rem;line-height:1.9">
+      أداة مخصصة لمساعدة الخطباء على التحقق من درجة الأحاديث المستشهد بها، على ثلاث طبقات: تحقق فوري من حديث مفرد، تحليل خطبة كاملة بالتلوين حسب الدرجة، وتجهيز مسودة خطبة من تعميم رسمي أو عنوان مع تدقيق ذاتي تلقائي.
+    </p>
+    <h3 style="margin:16px 0 8px;font-size:1rem;color:var(--green)">المصادر المعتمدة</h3>
+    <ul class="hint" style="font-size:.86rem;line-height:2;padding-right:18px;margin:0">
+      <li>السلسلة الصحيحة والضعيفة — ناصر الدين الألباني</li>
+      <li>تحقيقات شعيب الأرنؤوط (مسند أحمد وغيره)</li>
+      <li>فتح الباري وتقريب التهذيب — ابن حجر العسقلاني</li>
+      <li>مجمع الزوائد — الهيثمي</li>
+      <li>الجامع الصغير — السيوطي</li>
+      <li>تعليقات الذهبي والعراقي والسخاوي</li>
+    </ul>
+    <h3 style="margin:16px 0 8px;font-size:1rem;color:var(--green)">حدود النموذج الحالي</h3>
+    <p class="hint" style="font-size:.86rem;line-height:1.9">
+      هذا نموذج تجريبي بقاعدة بيانات محدودة (أكثر من ٣٠ حديثًا) كإثبات مفهوم. لا يغني عن الرجوع لأهل الاختصاص، ولا يُعتمد كمرجع نهائي في الفتوى أو التخريج. الخطة القادمة: ربط النظام بقواعد تخريج رقمية شاملة، ومراجعة شرعية رسمية قبل أي استخدام واسع.
+    </p>
+  </div>
+
+  <footer>مصادر التخريج المعتمدة في النموذج: السلسلة الصحيحة/الضعيفة للألباني، تحقيقات الأرنؤوط، فتح الباري وتقريب التهذيب لابن حجر، مجمع الزوائد للهيثمي، الجامع الصغير للسيوطي، وأقوال الذهبي والعراقي والسخاوي — عيّنة موسّعة للعرض التجريبي (+30 حديثًا)</footer>
+</div>
+
+<script>
+// ---------- Sample curated hadith database (demo subset) ----------
+const DB = [
+{keys:["انما الاعمال بالنيات","الاعمال بالنيات"],
+ text:"إنما الأعمالُ بالنيّاتِ، وإنما لكلِّ امرئٍ ما نوى",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن عمر بن الخطاب رضي الله عنه",
+ note:"من أشهر الأحاديث الصحيحة وأعظمها أصلًا في الدين."},
+
+{keys:["المسلم من سلم المسلمون من لسانه ويده"],
+ text:"المسلمُ من سَلِمَ المسلمونَ من لسانِه ويدِه",
+ grade:"ok", label:"صحيح", source:"رواه البخاري عن عبدالله بن عمرو رضي الله عنهما",
+ note:""},
+
+{keys:["الدين النصيحة"],
+ text:"الدِّينُ النصيحةُ",
+ grade:"ok", label:"صحيح", source:"رواه مسلم عن تميم الداري رضي الله عنه",
+ note:""},
+
+{keys:["بني الاسلام على خمس"],
+ text:"بُنِيَ الإسلامُ على خمسٍ: شهادةِ أن لا إله إلا اللهُ وأنّ محمدًا رسولُ اللهِ، وإقامِ الصلاةِ، وإيتاءِ الزكاةِ، وحجِّ البيتِ، وصومِ رمضانَ",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن ابن عمر رضي الله عنهما", note:""},
+
+{keys:["طلب العلم فريضة على كل مسلم"],
+ text:"طلَبُ العلمِ فريضةٌ على كلِّ مسلمٍ",
+ grade:"warn", label:"مختلف فيه (حسّنه الألباني بشواهده)", source:"رواه ابن ماجه عن أنس بن مالك",
+ note:"إسناده ضعيف من طريق واحد، لكن له شواهد تقويه عند بعض المحدثين كالألباني، وضعّفه آخرون."},
+
+{keys:["اطلبوا العلم ولو بالصين"],
+ text:"اطلبوا العلمَ ولو بالصِّين",
+ grade:"bad", label:"ضعيف جدًا / موضوع", source:"ذكره العجلوني في كشف الخفاء، وضعّفه جمع من المحدثين",
+ note:"لا يصح إسناده، وانتشاره الواسع لا يدل على ثبوته. المعنى صحيح (الحث على طلب العلم) لكن اللفظ لا يصح رفعه."},
+
+{keys:["حب الوطن من الايمان"],
+ text:"حبُّ الوطنِ من الإيمانِ",
+ grade:"bad", label:"موضوع لا أصل له", source:"قال جمع من المحدثين إنه لا يصح مرفوعًا، وليس له إسناد معروف",
+ note:"عبارة مشهورة على الألسنة لكنها ليست حديثًا نبويًا ثابتًا."},
+
+{keys:["اختلاف امتي رحمة"],
+ text:"اختلافُ أمّتي رحمةٌ",
+ grade:"bad", label:"لا يصح مرفوعًا", source:"قال الألباني: لا أصل له بهذا اللفظ",
+ note:"مشهور جدًا في السياق الفقهي لكنه غير ثابت عن النبي ﷺ."},
+
+{keys:["من عرف نفسه فقد عرف ربه"],
+ text:"مَن عرَف نفسَه فقد عرَف ربَّه",
+ grade:"bad", label:"موضوع", source:"قال ابن تيمية والنووي وغيرهما: لا يصح مرفوعًا، وليس من كلام النبي ﷺ",
+ note:"يُروى أحيانًا عن بعض الحكماء لا كحديث نبوي."},
+
+{keys:["الجنة تحت اقدام الامهات"],
+ text:"الجنةُ تحتَ أقدامِ الأمّهاتِ",
+ grade:"warn", label:"اللفظ بهذا الشكل غير ثابت، والمعنى صحيح بأحاديث أخرى",
+ source:"لفظ مشهور غير موثق بهذا النص، والمعنى ثابت في أحاديث بر الوالدين الصحيحة",
+ note:"يُنصح الاستشهاد بأحاديث بر الوالدين الصحيحة الثابتة بدل هذا اللفظ تحديدًا."},
+
+{keys:["خيركم من تعلم القران وعلمه"],
+ text:"خيرُكم من تعلَّمَ القرآنَ وعلَّمَه",
+ grade:"ok", label:"صحيح", source:"رواه البخاري عن عثمان بن عفان رضي الله عنه", note:""},
+
+{keys:["من كذب علي متعمدا فليتبوا مقعده من النار"],
+ text:"مَن كذَبَ عليَّ متعمِّدًا فليتبوَّأ مقعدَه من النارِ",
+ grade:"ok", label:"صحيح (متواتر)", source:"رواه البخاري ومسلم عن جمع من الصحابة", note:""},
+
+{keys:["الساعة تقوم والناس يريدون الدنيا وياتون الذي عندهم عمل ولا صلاح"],
+ text:"—", grade:"unk", label:"غير موجود بقاعدة البيانات التجريبية", source:"", note:""},
+
+{keys:["كاد الفقر ان يكون كفرا"],
+ text:"كاد الفقرُ أن يكونَ كفرًا",
+ grade:"bad", label:"ضعيف جدًا", source:"ضعّفه الألباني والعراقي وغيرهما، وقيل إنه من كلام السلف لا حديث مرفوع",
+ note:""},
+
+{keys:["نية المؤمن خير من عمله"],
+ text:"نيةُ المؤمنِ خيرٌ من عملِه",
+ grade:"warn", label:"مختلف في درجته", source:"رُوي بأسانيد ضعيفة، وقال بعض العلماء إن معناه صحيح بشواهد أخرى",
+ note:""},
+
+{keys:["طلب العلم فريضة على كل مسلم ومسلمة"],
+ text:"طلَبُ العلمِ فريضةٌ على كلِّ مسلمٍ ومسلمةٍ",
+ grade:"warn", label:"حسن لغيره", source:"رواه ابن ماجه، وحسّنه الألباني بشواهده، وأشار الأرنؤوط في تحقيقه لمسند أحمد إلى أن إسناده ضعيف لكن يشهد له غيره",
+ note:""},
+
+{keys:["من حسن اسلام المرء تركه ما لا يعنيه"],
+ text:"من حُسنِ إسلامِ المرءِ تركُه ما لا يَعنيه",
+ grade:"ok", label:"حسن", source:"رواه الترمذي وابن ماجه، وحسّنه النووي في الأربعين، وصححه ابن حجر العسقلاني في بعض طرقه",
+ note:""},
+
+{keys:["تبسمك في وجه اخيك صدقة"],
+ text:"تبسُّمُك في وجهِ أخيكَ صدقةٌ",
+ grade:"ok", label:"صحيح", source:"رواه الترمذي عن أبي ذر، وصححه الألباني",
+ note:""},
+
+{keys:["رحم الله امرا قال خيرا فغنم او سكت فسلم"],
+ text:"رحمَ اللهُ امرأً قال خيرًا فغَنِمَ، أو سكَتَ فسَلِمَ",
+ grade:"warn", label:"ضعيف بهذا اللفظ، والمعنى صحيح بأحاديث أخرى", source:"أورده الهيثمي في مجمع الزوائد وتكلم في إسناده",
+ note:""},
+
+{keys:["اعمل لدنياك كانك تعيش ابدا واعمل لاخرتك كانك تموت غدا"],
+ text:"اعمَلْ لدنياك كأنَّك تعيشُ أبدًا، واعمَلْ لآخرتِك كأنَّك تموتُ غدًا",
+ grade:"bad", label:"لا يصح مرفوعًا", source:"قال العراقي والسخاوي: لا يُعرف له إسناد ثابت عن النبي ﷺ، وإنما يُروى عن بعض السلف",
+ note:""},
+
+{keys:["ما نقصت صدقة من مال"],
+ text:"ما نقَصَت صدقةٌ من مالٍ",
+ grade:"ok", label:"صحيح", source:"رواه مسلم عن أبي هريرة رضي الله عنه",
+ note:""},
+
+{keys:["الكلمة الطيبة صدقة"],
+ text:"الكلمةُ الطيّبةُ صدقةٌ",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن أبي هريرة رضي الله عنه",
+ note:""},
+
+{keys:["اذا مات ابن ادم انقطع عمله الا من ثلاث"],
+ text:"إذا ماتَ ابنُ آدمَ انقطعَ عملُه إلا من ثلاثٍ: صدقةٍ جاريةٍ، أو علمٍ يُنتفعُ به، أو ولدٍ صالحٍ يدعو له",
+ grade:"ok", label:"صحيح", source:"رواه مسلم عن أبي هريرة رضي الله عنه",
+ note:""},
+
+{keys:["صلاة الجماعة تفضل صلاة الفذ بسبع وعشرين درجة"],
+ text:"صلاةُ الجماعةِ تفضُلُ صلاةَ الفذِّ بسبعٍ وعشرينَ درجةً",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن ابن عمر رضي الله عنهما",
+ note:""},
+
+{keys:["اتقوا النار ولو بشق تمرة"],
+ text:"اتَّقوا النارَ ولو بشقِّ تمرةٍ",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن عدي بن حاتم رضي الله عنه",
+ note:""},
+
+{keys:["من غشنا فليس منا"],
+ text:"من غشَّنا فليسَ منّا",
+ grade:"ok", label:"صحيح", source:"رواه مسلم عن أبي هريرة رضي الله عنه",
+ note:""},
+
+{keys:["اللهم اني اعوذ بك من علم لا ينفع"],
+ text:"اللهمَّ إني أعوذُ بكَ من علمٍ لا ينفعُ، ومن قلبٍ لا يخشعُ، ومن نفسٍ لا تشبعُ، ومن دعوةٍ لا يُستجابُ لها",
+ grade:"ok", label:"صحيح", source:"رواه مسلم عن زيد بن أرقم رضي الله عنه",
+ note:""},
+
+{keys:["ليس الشديد بالصرعة انما الشديد الذي يملك نفسه عند الغضب"],
+ text:"ليس الشديدُ بالصُّرَعةِ، إنما الشديدُ الذي يملِكُ نفسَه عند الغضبِ",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن أبي هريرة رضي الله عنه",
+ note:""},
+
+{keys:["كل بدعة ضلالة"],
+ text:"وكلَّ بدعةٍ ضلالةٌ",
+ grade:"ok", label:"صحيح (جزء من حديث خطبة الحاجة)", source:"رواه مسلم عن جابر بن عبدالله رضي الله عنهما، ضمن حديث خطبة الحاجة",
+ note:"يحتاج فهم المراد بـ\"البدعة\" هنا ضمن سياقه عند أهل العلم، فالعموم مخصوص عند كثير من الشراح."},
+
+{keys:["الراحمون يرحمهم الرحمن"],
+ text:"الراحمونَ يرحمُهم الرحمنُ، ارحَموا من في الأرضِ يرحمْكم من في السماءِ",
+ grade:"ok", label:"صحيح", source:"رواه أبو داود والترمذي عن عبدالله بن عمرو، وصححه الألباني",
+ note:""},
+
+{keys:["بشروا ولا تنفروا ويسروا ولا تعسروا"],
+ text:"يسِّروا ولا تُعسِّروا، وبشِّروا ولا تُنفِّروا",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن أنس بن مالك رضي الله عنه",
+ note:""},
+
+{keys:["نضر الله امرا سمع مقالتي فوعاها"],
+ text:"نضَّرَ اللهُ امرأً سمِعَ مقالتي فوعاها، فأدّاها كما سمِعَها",
+ grade:"ok", label:"صحيح", source:"رواه الترمذي وابن ماجه، وصححه الألباني، وحسّنه ابن حجر العسقلاني في بعض طرقه",
+ note:""},
+
+{keys:["العلماء ورثة الانبياء"],
+ text:"العلماءُ ورثةُ الأنبياءِ",
+ grade:"ok", label:"صحيح (بمجموع طرقه)", source:"رواه أبو داود والترمذي عن أبي الدرداء، وصححه الألباني بمجموع طرقه، وتكلم فيه الذهبي في بعض الأسانيد المفردة",
+ note:""},
+
+{keys:["من سلك طريقا يلتمس فيه علما سهل الله له طريقا الى الجنة"],
+ text:"من سلَكَ طريقًا يلتمسُ فيه علمًا سهَّلَ اللهُ له به طريقًا إلى الجنةِ",
+ grade:"ok", label:"صحيح", source:"رواه مسلم عن أبي هريرة رضي الله عنه",
+ note:""},
+
+{keys:["ان من البيان لسحرا"],
+ text:"إنَّ من البيانِ لَسِحرًا",
+ grade:"ok", label:"صحيح", source:"رواه البخاري عن ابن عمر رضي الله عنهما",
+ note:""},
+
+{keys:["الحياء لا ياتي الا بخير"],
+ text:"الحياءُ لا يأتي إلا بخيرٍ",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن عمران بن حصين رضي الله عنه",
+ note:""},
+
+{keys:["صلاة الليل مثنى مثنى"],
+ text:"صلاةُ الليلِ مَثنى مَثنى",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن ابن عمر رضي الله عنهما",
+ note:""},
+
+{keys:["اذا اراد الله بعبده خيرا عجل له العقوبة في الدنيا"],
+ text:"إذا أرادَ اللهُ بعبدِه خيرًا عجَّلَ له العقوبةَ في الدنيا",
+ grade:"ok", label:"حسن", source:"رواه الترمذي عن أنس بن مالك، وحسّنه الألباني والأرنؤوط",
+ note:""},
+
+{keys:["اربع من كن فيه كان منافقا خالصا"],
+ text:"أربعٌ من كنَّ فيه كان منافقًا خالصًا: إذا حدَّثَ كذَبَ، وإذا وعدَ أخلفَ، وإذا عاهدَ غدَرَ، وإذا خاصمَ فجَرَ",
+ grade:"ok", label:"صحيح", source:"رواه البخاري ومسلم عن عبدالله بن عمرو رضي الله عنهما",
+ note:""},
+
+];
+
+// ---------- Text normalization ----------
+function normalize(t){
+  return t
+    .replace(/[\u064B-\u0652]/g,'')        // remove tashkeel
+    .replace(/[إأآا]/g,'ا')
+    .replace(/ى/g,'ي')
+    .replace(/ة/g,'ه')
+    .replace(/ؤ/g,'و')
+    .replace(/ئ/g,'ي')
+    .replace(/[^\u0600-\u06FF\s]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function scoreMatch(inputNorm, keyNorm){
+  const a = new Set(inputNorm.split(' ').filter(w=>w.length>1));
+  const b = new Set(keyNorm.split(' ').filter(w=>w.length>1));
+  if(b.size===0) return 0;
+  let hit=0;
+  b.forEach(w=>{ if(a.has(w)) hit++; });
+  return hit / b.size;
+}
+
+function findBestMatch(rawText){
+  const norm = normalize(rawText);
+  let best=null, bestScore=0;
+  DB.forEach(item=>{
+    item.keys.forEach(k=>{
+      const kn = normalize(k);
+      const s = scoreMatch(norm, kn);
+      if(s>bestScore){ bestScore=s; best=item; }
+    });
+  });
+  return bestScore>=0.55 ? {item:best, score:bestScore} : null;
+}
+
+function badgeHtml(item){
+  const cls = item.grade==='ok'?'b-ok':item.grade==='warn'?'b-warn':item.grade==='bad'?'b-bad':'b-unk';
+  return `<span class="badge ${cls}">${item.label}</span>`;
+}
+
+function renderHadithBlock(item){
+  const cls = item.grade==='ok'?'b-ok':item.grade==='warn'?'b-warn':item.grade==='bad'?'b-bad':'b-unk';
+  return `<div class="hadith-block">
+    ${badgeHtml(item)}
+    <div class="hadith-text">${item.text}</div>
+    <div class="hadith-meta"><b>المصدر:</b> ${item.source || '—'}</div>
+    ${item.note?`<div class="hadith-meta">${item.note}</div>`:''}
+  </div>`;
+}
+
+// ---------- Single check ----------
+function checkSingle(){
+  const val = document.getElementById('singleInput').value.trim();
+  const out = document.getElementById('singleResult');
+  if(!val){ out.innerHTML = '<div class="empty">اكتب نص الحديث أولًا</div>'; return; }
+  const m = findBestMatch(val);
+  if(!m){
+    out.innerHTML = `<div class="hadith-block">
+      <span class="badge b-unk">غير موجود في القاعدة التجريبية</span>
+      <div class="hint" style="margin-top:8px">هذا الحديث غير مدرج ضمن العيّنة المحدودة للنموذج التجريبي. في النسخة الكاملة سيتم ربطه بقواعد بيانات التخريج الشاملة (كتب التخريج المعتمدة).</div>
+    </div>`;
+    return;
+  }
+  out.innerHTML = renderHadithBlock(m.item);
+  saveHistoryEntry('🔍 تحقق من حديث', `«${val.slice(0,40)}${val.length>40?'…':''}» — ${m.item.label}`);
+}
+
+// ---------- Khutbah analysis ----------
+function splitSentences(text){
+  return text.split(/(?<=[\.\!\?؟۔])\s+|\n+/).map(s=>s.trim()).filter(s=>s.length>3);
+}
+
+// shared: returns {markedHtml, foundItems}
+function analyzeHadithsInText(val){
+  const sentences = splitSentences(val);
+  let htmlOut = '';
+  let found = [];
+  sentences.forEach(s=>{
+    const m = findBestMatch(s);
+    if(m && m.item.grade!=='unk'){
+      const cls = m.item.grade==='ok'?'ok':m.item.grade==='warn'?'warn':'bad';
+      htmlOut += `<mark class="${cls}" title="${m.item.label}">${s}</mark> `;
+      found.push(m.item);
+    } else {
+      htmlOut += s.replace(/</g,'&lt;') + ' ';
+    }
+  });
+  return {markedHtml: htmlOut, found};
+}
+
+function checkKhutbah(){
+  const val = document.getElementById('khutbahInput').value.trim();
+  const out = document.getElementById('khutbahResult');
+  if(!val){ out.innerHTML = '<div class="empty">الصق نص الخطبة أولًا</div>'; return; }
+  const {markedHtml, found} = analyzeHadithsInText(val);
+  let summary = '';
+  if(found.length===0){
+    summary = '<div class="empty">لم يُعثر على أحاديث من القاعدة التجريبية ضمن النص. جرّب الأحاديث المذكورة في تبويب "تحقق من حديث".</div>';
+  } else {
+    summary = '<h3 style="margin:16px 0 8px;font-size:1rem">الأحاديث المكتشفة:</h3>';
+    found.forEach(item=> summary += renderHadithBlock(item));
+  }
+  out.innerHTML = `<div class="hadith-block khutbah-out">${markedHtml}</div>${summary}`;
+  saveHistoryEntry('📝 تحليل خطبة', `${found.length} حديث مكتشف — ${val.slice(0,30)}…`);
+}
+
+// ---------- Prepare khutbah: mode toggle ----------
+let prepareMode = 'circular';
+function setPrepareMode(mode){
+  prepareMode = mode;
+  document.querySelectorAll('.subtab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.subtab[data-mode="${mode}"]`).classList.add('active');
+  document.getElementById('modeCircular').style.display = mode==='circular' ? 'block':'none';
+  document.getElementById('modeTitle').style.display = mode==='title' ? 'block':'none';
+}
+
+// ---------- Prepare khutbah from official circular or title (uses sample capability) ----------
+async function prepareKhutbah(){
+  const circular = document.getElementById('circularInput').value.trim();
+  const title = document.getElementById('titleInput').value.trim();
+  const status = document.getElementById('prepareStatus');
+  const out = document.getElementById('prepareResult');
+  const btn = document.getElementById('prepareBtn');
+
+  if(prepareMode==='circular' && !circular){ status.textContent = 'الصق نص التعميم أولًا.'; return; }
+  if(prepareMode==='title' && !title){ status.textContent = 'اكتب عنوان الخطبة أولًا.'; return; }
+
+  const sample = await claude.use('sample');
+  if(!sample){
+    status.textContent = 'ميزة التوليد غير متاحة في هذا العرض (تحتاج إذن المساعد). جرّب تبويب "تحليل خطبة" يدويًا بدلاً من ذلك.';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = '...جارٍ إعداد المسودة';
+  status.textContent = '';
+  out.innerHTML = '<div class="empty">جارٍ صياغة المسودة، قد يستغرق ثوانٍ...</div>';
+
+  const sourceBlock = prepareMode==='circular'
+    ? `بناءً على "التعميم" الرسمي التالي (الصادر من الوزارة/الجهة المختصة ويتضمن الموضوع والنقاط المطلوب تغطيتها):\n"""\n${circular}\n"""\nالتزم بالنقاط الواردة في التعميم تحديدًا ولا تخرج عنها.`
+    : `اكتب خطبة عامة بعنوان: "${title}"\nلا يوجد تعميم رسمي مرفق، فاختر المضامين والأدلة المناسبة للعنوان بنفسك مع الالتزام بالقواعد أدناه.`;
+
+  const prompt = `أنت مساعد لكتابة خطب الجمعة باللغة العربية الفصحى.
+${sourceBlock}
+
+اكتب مسودة خطبة جمعة كاملة بالتنسيق التالي:
+١) مقدمة (حمد وثناء وشهادتان مختصرة)
+٢) العرض: تفصيل الموضوع بأسلوب وعظي مناسب للمنبر
+٣) خاتمة ودعاء مناسب للموضوع
+
+قواعد إلزامية:
+- لا تكتب نص أي حديث نبوي بلفظه الدقيق إلا إذا كنت متأكدًا تمامًا من ثبوته وشهرته الواسعة (مثل: "إنما الأعمال بالنيات").
+- إن احتجت الإشارة لمعنى حديث لست متأكدًا من لفظه الحرفي، فاذكر المعنى بأسلوبك دون وضعه بين علامتي اقتباس كنص نبوي، أو أضف عبارة [يحتاج تخريج] بعده مباشرة.
+- لا تنسب أي آية أو حديث لمصدر إن لم تكن متأكدًا منه.
+- اجعل الطول مناسبًا لخطبة جمعة عادية (لا طويلة جدًا).
+- لا تكتب أي مقدمة أو تعليق خارج نص الخطبة نفسه، ابدأ مباشرة بالخطبة.`;
+
+  let liveText = '';
+  try{
+    const res = await sample(prompt, {
+      modelTier: 'default',
+      onText: ({text}) => {
+        liveText = text;
+        out.innerHTML = `<div class="hadith-block khutbah-out">${liveText.replace(/</g,'&lt;')}</div>`;
+      }
+    });
+    const finalText = res.text || liveText;
+    const {markedHtml, found} = analyzeHadithsInText(finalText);
+    let summary = `<div class="disclaimer" style="margin-top:12px">راجع المسودة كاملة قبل الإلقاء — خصوصًا أي جزء لا يزال بلا تلوين (لم يُقارن بقاعدة الأحاديث) أو مكتوب عليه [يحتاج تخريج].</div>`;
+    if(found.length>0){
+      summary += '<h3 style="margin:16px 0 8px;font-size:1rem">الأحاديث المكتشفة في المسودة:</h3>';
+      found.forEach(item=> summary += renderHadithBlock(item));
+    }
+    out.innerHTML = `<div class="hadith-block khutbah-out" id="draftText">${markedHtml}</div>
+      <button class="primary" style="background:var(--gold);margin-top:10px" onclick="copyDraft('${(prepareMode==='circular'?circular:title).replace(/'/g,"").slice(0,30)}')">📋 نسخ نص المسودة</button>
+      ${summary}`;
+    status.textContent = 'تم إعداد المسودة. راجعها وعدّلها حسب أسلوبك قبل الإلقاء.';
+    saveHistoryEntry('🕌 تجهيز خطبة', `${prepareMode==='circular'?'من تعميم':'بعنوان'} — ${found.length} حديث فُحص`);
+    window._lastDraftText = finalText;
+  }catch(err){
+    status.textContent = 'تعذّر إعداد المسودة (' + (err?.code || 'خطأ') + '). حاول مرة أخرى.';
+    out.innerHTML = '';
+  }finally{
+    btn.disabled = false; btn.textContent = '🖋️ جهّز مسودة الخطبة';
+  }
+}
+
+// ---------- History (localStorage, per-viewer only) ----------
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem('hk_history') || '[]'); }
+  catch(e){ return []; }
+}
+function saveHistoryEntry(type, summary){
+  try{
+    const h = loadHistory();
+    h.unshift({ type, summary, time: new Date().toLocaleString('ar-SA') });
+    localStorage.setItem('hk_history', JSON.stringify(h.slice(0,50)));
+  }catch(e){ /* storage unavailable, ignore silently */ }
+}
+function clearHistory(){
+  try{ localStorage.removeItem('hk_history'); }catch(e){}
+  renderHistory();
+}
+function renderHistory(){
+  const list = document.getElementById('historyList');
+  const h = loadHistory();
+  if(h.length===0){ list.innerHTML = '<div class="empty">لا يوجد سجل بعد. أي عملية تحقق أو تحليل أو تجهيز خطبة ستُسجَّل هنا تلقائيًا.</div>'; return; }
+  list.innerHTML = h.map(item => `
+    <div class="hadith-block">
+      <span class="badge b-unk">${item.type}</span>
+      <div class="hadith-meta" style="margin-top:8px">${item.summary}</div>
+      <div class="hadith-meta" style="color:var(--muted);font-size:.75rem">${item.time}</div>
+    </div>`).join('');
+}
+
+function copyDraft(){
+  const text = window._lastDraftText || '';
+  navigator.clipboard?.writeText(text).then(()=>{
+    alert('تم نسخ نص المسودة.');
+  }).catch(()=>{ alert('تعذّر النسخ التلقائي، انسخ النص يدويًا من الأعلى.'); });
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    document.getElementById('panel-single').style.display = target==='single' ? 'block':'none';
+    document.getElementById('panel-khutbah').style.display = target==='khutbah' ? 'block':'none';
+    document.getElementById('panel-prepare').style.display = target==='prepare' ? 'block':'none';
+    document.getElementById('panel-history').style.display = target==='history' ? 'block':'none';
+    document.getElementById('panel-about').style.display = target==='about' ? 'block':'none';
+    if(target==='history') renderHistory();
+  });
+});
+</script>
+</body>
+</html>
